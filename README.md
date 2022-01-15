@@ -1,2 +1,2 @@
 # Deltahacks 8 
-Michael Shi, Thomas Zhou, Jeffery Liu, Warren ye
+Michael Shi, Thomas Zhou, Jeffery Liu, Warren Ye
