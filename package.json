@@ -1,0 +1,20 @@
+{
+  "name": "discordbot",
+  "version": "1.0.0",
+  "description": "audio read support for discord app",
+  "main": "audio.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node audio.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/speech": "^4.9.0",
+    "discord.js": "^13.6.0",
+    "fs": "^0.0.1-security"
+  },
+  "devDependencies": {
+    "eslint": "^8.6.0"
+  }
+}
