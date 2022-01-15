@@ -2,7 +2,7 @@ from click import pass_context
 import discord
 from discord.ext import commands
 
-TOKEN = 'OTMwNTkyNjEwOTgzMjMxNTU5.Yd4H6A.fAbTU6LYKv2eE3hIzJZL3i17wgg'
+TOKEN = 'token'
 
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix = '#', intents=intents)
