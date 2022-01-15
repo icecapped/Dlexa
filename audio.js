@@ -11,8 +11,7 @@ const client = new Discord.Client({intents: ["GUILD_MESSAGES", "GUILD_VOICE_STAT
 const speechClient = new speech.SpeechClient(); 
 const config = require("./config.json");
 const player = DiscordVoice.createAudioPlayer();
-const encoder = new OpusEncoder(48000, 2);
-
+stream = null;
 
 function joinVoice(channel){
     return connection = joinVoiceChannel({
@@ -47,51 +46,9 @@ client.on("message", async message => {
         if (!message.member.voice.channel.joinable) return message.reply(`I don't have permission to join that voice channel!`);
         if (!message.member.voice.channel.speakable) return message.reply(`I don't have permission to speak in that voice channel!`);
 
-        var voice = joinVoice(channel);
+        joinVoice(channel);
         
-        // const connection2 = getVoiceConnection(channel.guild.id);
         
-        // connection2.on('voiceStateUpdate', (user, speaking) => { 
-        //     console.log("THSIASIHORHWVOAEUVHLSIDGH,SDFKS")
-        //     if (user.bot) return; 
-        //     if (!speaking) return;
-        //     console.log(user);
-
-
-        //     const audio = connection.receiver.createStream(user, { mode: 'pcm' }); 
-
-        //     const audioFileName = './recordings/' + user.id + '_' + Date.now() + '.pcm';
-
-        //     audio.pipe(fs.createWriteStream(audioFileName));
-            
-        //     audio.on('end', async () => {
-        //         fs.stat(audioFileName, async (err, stat) => { 
-        //             if (!err && stat.size) {
-        //                 const file = fs.readFileSync(audioFileName);
-        //                 const audioBytes = file.toString('base64');
-        //                 const audio = {
-        //                 content: audioBytes,
-        //             };
-        //             const config = {
-        //                 encoding: 'LINEAR16',
-        //                 sampleRateHertz: 48000,
-        //                 languageCode: 'en-US',
-        //                 audioChannelCount: 2,
-        //             };
-        //             const request = {
-        //                 audio: audio,
-        //                 config: config,
-        //             };
-        //             const [response] = await speechClient.recognize(request);
-        //             const transcription = response.results
-        //                 .map(result => result.alternatives[0].transcript)
-        //                 .join('\n');
-        //             message.reply(transcription);
-        //         }
-        //         });
-        //     });
-
-        // });
     }
 
     //play youtube video
@@ -129,29 +86,27 @@ client.on("message", async message => {
 
         const connection = joinVoice(channel);
         const receiver = new DiscordVoice.VoiceReceiver(connection);
+        stream = receiver.subscribe("165218817025245186");
+        stream.read();
+        console.log()
+        stream.on('data', data => {
+            let chunk;
+            console.log('Stream is readable (new data received in buffer)');
+            
+        });
+    }
 
-        // const writer = receiver.pipe(fs.createWriteStream('./audio/recording.pcm'));
-        // writer.on('finish', () => {
-        //     channel.leave();
-        //     message.channel.send('It went quiet, so I left...');
-        // });
+    if(command === "pause"){
+        stream.pause();
+        console.log("CALLED")
 
-
-        // const ffmpeg = require('ffmpeg');
-
-        // try {
-        //     var process = new ffmpeg('./audio/recording.pcm');
-        //     process.then(function (audio) {
-        //         audio.fnExtractSoundToMP3('./audio/file.mp3', function (error, file) {
-        //         if (!error) console.log('Audio File: ' + file);
-        //         });
-        // }, function (err) {
-        //     console.log('Error: ' + err);      
-        // });
-        // } catch (e) {
-        //     console.log(e);
-        // }
+        
+        stream.on('end', () => {
+            console.log('Reached end of stream.');
+        });
     }
 });
+
+
 
 client.login(config.token);
