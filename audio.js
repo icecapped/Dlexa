@@ -7,10 +7,7 @@ const VDiscord = require('vdiscord')
 
 const client = new Discord.Client({intents: ["GUILD_MESSAGES", "GUILD_VOICE_STATES", "GUILDS"]});
 const config = require("./config.json");
-const broadcast = client.voice.createBroadcast();
 const queue = new Map();
-
-stream = null;
 
 async function play(connection, url) {
     connection.play(await ytdl(url, {filter: 'audioonly'}), { type: 'opus' });
@@ -70,25 +67,27 @@ client.on("message", async message => {
         if ((channel.members.filter((e) => client.user.id === e.user.id).size == 0)) return message.reply('Join a VC');
 
         const connection = client.voice.connections.get(message.member.guild.id);
+        channel.members.forEach((memberVC) => {
+            if(!memberVC.user.bot){
+                console.log(memberVC.user.username)
+                const receiver = connection.receiver.createStream(memberVC, {
+                    mode: "pcm",
+                    end: "silence"
+                });
+                receiver.on('data', data => {
+                    console.log("debug: " + data)
+                    VDiscord.sendAudio(data)
+                });
 
-        const receiver = connection.receiver.createStream(message.member, {
-            mode: "pcm",
-            end: "silence"
-        });
-        receiver.on('data', data => {
-            console.log("debug: " + data)
-            VDiscord.sendAudio(data)
-        });
-
-        message.channel.send('Recording');
-        const writer = receiver.pipe(fs.createWriteStream('audio/user_audio'));
-        writer.on('finish', () => {
-            message.channel.send('Done');
-        });
+                message.channel.send('Recording for ' + memberVC.user.username);
+                const writer = receiver.pipe(fs.createWriteStream('audio/'+memberVC.user.username+'audio'));
+                writer.on('finish', () => {
+                    message.channel.send('Done for ' + memberVC.user.username);
+                });
+            }
+        })
     }
 });
-
-
 
 
 async function execute(message, serverQueue) {
