@@ -42,16 +42,7 @@ client.on("message", async message => {
 
         if (channel) {
             const connection = await channel.join();
-            const receiver = connection.receiver.createStream(message.member, {
-                mode: "pcm",
-                end: "silence"
-            });
-            message.channel.send('Recording');
-            const writer = receiver.pipe(fs.createWriteStream('audio/user_audio'));
-            writer.on('finish', () => {
-                channel.leave();
-                message.channel.send('Left');
-            });  
+             
         } 
     }
 
@@ -76,6 +67,8 @@ client.on("message", async message => {
     
     if(command === "record"){
         if(!channel) return message.channel.send('Join a VC first!');
+        if ((channel.members.filter((e) => client.user.id === e.user.id).size == 0)) return message.reply('Join a VC');
+
         const connection = client.voice.connections.get(message.member.guild.id);
 
         const receiver = connection.receiver.createStream(message.member, {
@@ -85,8 +78,7 @@ client.on("message", async message => {
         message.channel.send('Recording');
         const writer = receiver.pipe(fs.createWriteStream('audio/user_audio'));
         writer.on('finish', () => {
-            channel.leave();
-            message.channel.send('Left');
+            message.channel.send('Done');
         });
     }
 
