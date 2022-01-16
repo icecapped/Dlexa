@@ -9,7 +9,7 @@ const utilities = require('./index.js');
 const client = new Discord.Client({intents: ["GUILD_MESSAGES", "GUILD_VOICE_STATES", "GUILDS"]});
 const config = require("./config.json");
 const queue = new Map();
-const pp = new VDiscord();
+const controller = new VDiscord(client);
 const utils = new utilities();
 
 
@@ -86,12 +86,13 @@ client.on("message", async message => {
                 console.log(memberVC.user.username)
                 const receiver = connection.receiver.createStream(memberVC, {
                     mode: "pcm",
-                    end: "silence"
+                    end: "manual"
                 });
                 receiver.on('data', data => {
                     //console.log("debug: " + data)
-                    pp.sendAudio(data, memberVC.user.username)
+                    controller.sendAudio(data, memberVC.user.username);
                 });
+
 
                 message.channel.send('Recording for ' + memberVC.user.username);
                 const writer = receiver.pipe(fs.createWriteStream('audio/'+memberVC.user.username+'audio'));
