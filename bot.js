@@ -13,6 +13,7 @@ const pp = new VDiscord();
 const utils = new utilities();
 
 
+
 async function play(connection, url) {
     connection.play(await ytdl(url, {filter: 'audioonly'}), { type: 'opus' });
 }
@@ -27,9 +28,16 @@ client.on("message", async message => {
     if(!message.content.startsWith(config.prefix)) return;
     const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
-    const channel = message.member.voice.channel; 
-    
+    const channel = message.member.voice.channel;
 
+    if(command === "deafen"){
+        message.member.voice.setDeaf(true)
+    }
+
+    if(command === "undeafen"){
+        message.member.voice.setDeaf(false)
+    }
+    
     //use utils
     utils.respondToMessage(message);
     if(command === "ping") {
@@ -172,8 +180,9 @@ function play(guild, song) {
     const dispatcher = serverQueue.connection
         .play(ytdl(song.url))
         .on("finish", () => {
-        serverQueue.songs.shift();
-        play(guild, serverQueue.songs[0]);
+
+            serverQueue.songs.shift();
+            play(guild, serverQueue.songs[0]);
         })
         .on("error", error => console.error(error));
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
