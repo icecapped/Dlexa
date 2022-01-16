@@ -45,7 +45,9 @@ function youtubesearch(search, message){
         const video = resp.data.video_results[ytcounter];
         ytlink = video.link;
         ytsearch = search;
-        const m = message.channel.send("Title of video is "  + video.title + " by " + video.channel.name + ". Is this correct? (?y/?n)");
+        const output = "Title of video is "  + video.title + " by " + video.channel.name + ". Is this correct? (?y/?n)";
+        const m = message.channel.send(output);
+        texttomp3(output, message);
     });
 }
 
@@ -78,7 +80,8 @@ client.on("message", async message =>{
     else if(keyword == "weather"){
         const city = tokens[1];
         axios.get("http://api.openweathermap.org/data/2.5/weather?q=" + city + "&units=metric&appid=" + config.weather_token).then(resp =>{
-            const output = "Temp is " + resp.data.main.temp + " C, feels like " + resp.data.main.feels_like + " C, " + resp.data.weather[0].description + ".";
+            const output = "The temperature is " + resp.data.main.temp + " degrees Celcius, it feels like " + resp.data.main.feels_like + " degrees Celcius, and the weather is " 
+            + resp.data.weather[0].description + ".";
             const m = message.channel.send(output);
             texttomp3(output, message);
         });
@@ -106,7 +109,9 @@ client.on("message", async message =>{
     }
     else if(keyword == "y"){
         if (ytlink == ""){
-            const m = await message.channel.send("Please search for a youtube video first. ");
+            const output = "Please search for a youtube video first. "
+            const m = await message.channel.send(output);
+            texttomp3(output, message);
         }
         else{
             const m = await message.channel.send(ytlink);
@@ -116,7 +121,9 @@ client.on("message", async message =>{
     }
     else if(keyword == "n"){
         if (ytlink == ""){
-            const m = await message.channel.send("Please search for a youtube video first. ");
+            const output = "Please search for a youtube video first. "
+            const m = await message.channel.send(output);
+            texttomp3(output, message);
         }
         else{
             ytcounter = ytcounter + 1;
