@@ -17,14 +17,22 @@ class utilities{
     async texttomp3(tts, text, message){
         const request = {
             input: {text: text},
-            voice: {languageCode: "en_US", ssmlGender: "FEMALE"},
+            voice: {languageCode: "en_UK", ssmlGender: "MALE"},
             audioConfig: {audioEncoding: "MP3"},
           };
 
         const [response] = await tts.synthesizeSpeech(request);
         const writeFile = util.promisify(fs.writeFile);
         writeFile("audio/output.mp3", response.audioContent, "binary");
-        const m = message.channel.send("Message successfully converted to speech at output.mp3");
+        const m = message.channel.send("Speaking");
+        try {
+            const voiceChannel = message.member.voice.channel;
+            var connection = await voiceChannel.join();
+            connection.play("audio/output.mp3");
+        }
+        catch(err){
+            console.log("Failed to play");
+        }
     }
 
     //function to search youtube with a key phrase and check if results are correct
@@ -37,7 +45,7 @@ class utilities{
         });
     }
 
-    async respondToMessage(message){
+    async respondToMessage(message, client){
         const projectId = "angular-unison-338316"
         const keyFilename = "angular-unison-338316-0c8e7e275407.json"
         const translate = new Translate({projectId, keyFilename});
