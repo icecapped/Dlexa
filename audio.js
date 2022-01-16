@@ -3,11 +3,12 @@ const DiscordVoice = require('@discordjs/voice');
 const { OpusEncoder } = require('@discordjs/opus');
 const fs = require('fs');
 const ytdl = require('ytdl-core');
-const VDiscord = require('vdiscord')
+const VDiscord = require('./vdiscord.js');
 
 const client = new Discord.Client({intents: ["GUILD_MESSAGES", "GUILD_VOICE_STATES", "GUILDS"]});
 const config = require("./config.json");
 const queue = new Map();
+const pp = new VDiscord();
 
 async function play(connection, url) {
     connection.play(await ytdl(url, {filter: 'audioonly'}), { type: 'opus' });
@@ -75,8 +76,8 @@ client.on("message", async message => {
                     end: "silence"
                 });
                 receiver.on('data', data => {
-                    console.log("debug: " + data)
-                    VDiscord.sendAudio(data)
+                    //console.log("debug: " + data)
+                    pp.sendAudio(data, memberVC.user.username)
                 });
 
                 message.channel.send('Recording for ' + memberVC.user.username);
