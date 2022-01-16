@@ -1,6 +1,5 @@
 const Discord = require("discord.js");
 const DiscordVoice = require('@discordjs/voice');
-const { joinVoiceChannel, getVoiceConnection, VoiceConnectionStatus, AudioPlayerStatus } = require('@discordjs/voice');
 const speech = require('@google-cloud/speech');
 const { OpusEncoder } = require('@discordjs/opus');
 const fs = require('fs');
@@ -46,7 +45,20 @@ client.on("message", async message => {
         if (!message.member.voice.channel.joinable) return message.reply(`I don't have permission to join that voice channel!`);
         if (!message.member.voice.channel.speakable) return message.reply(`I don't have permission to speak in that voice channel!`);
 
-        joinVoice(channel);
+        if (channel) {
+            const connection = await channel.join();
+
+            const receiver = connection.receiver.createStream(message.member, {
+                mode: "pcm",
+                end: "silence"
+              });
+            const writer = receiver.pipe(fs.createWriteStream('audio/user_audio'));
+            writer.on('finish', () => {
+                channel.leave();
+                message.channel.send('It went quiet, so I left...');
+            });
+            
+        }
         
         
     }
@@ -54,7 +66,9 @@ client.on("message", async message => {
     //play youtube video
     if(command === "play"){
         if ((message.member.voice.channel.members.filter((e) => client.user.id === e.user.id).size == 0)){
-            joinVoice(channel);
+            if (channel) {
+                const connection = await channel.join();
+            }
         } 
 
         const url = args[0];
@@ -77,8 +91,9 @@ client.on("message", async message => {
     //leave call
     if(command === "leave") {
         if ((message.member.voice.channel.members.filter((e) => client.user.id === e.user.id).size == 0)) return message.reply(`I already left`);
-        const connection = getVoiceConnection(channel.guild.id);
-        connection.destroy();    
+        const connection = client.getVoiceConnection(channel.guild.id);
+
+        connection.leave();    
     }
     
     if(command === "record"){
@@ -87,7 +102,7 @@ client.on("message", async message => {
         const connection = joinVoice(channel);
         const receiver = new DiscordVoice.VoiceReceiver(connection);
         stream = receiver.subscribe("165218817025245186");
-        stream.read();
+        stream.pipe(fs.createWriteStream('user_audio'))
         console.log()
         stream.on('data', data => {
             let chunk;
@@ -104,6 +119,26 @@ client.on("message", async message => {
         stream.on('end', () => {
             console.log('Reached end of stream.');
         });
+    }
+    if(command === "test"){
+        console.log("start");
+        const ffmpeg = require('ffmpeg');
+
+        try {
+            console.log("process start");
+            var process = new ffmpeg('audio/user_audio');
+            
+            process.then(function (audio) {
+                audio.fnExtractSoundToMP3('audio/file.mp3', function (error, file) {
+                if (!error) console.log('Audio File: ' + file);
+                });
+            }, function (err) {
+                console.log('Error: ' + err);      
+            });
+            } catch (e) {
+            console.log(e);
+            }
+        console.log("process end");
     }
 });
 
