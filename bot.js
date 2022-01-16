@@ -33,14 +33,23 @@ client.on("message", async message => {
     guild = message.guild;
     yep = message.id;
 
-    if(command === "deafen"){
+    if(command === "death"){
+        message.member.voice.setDeaf(true)
+    }
+    if(command === "definitely"){
         message.member.voice.setDeaf(true)
     }
 
     if(command === "undeafen"){
         message.member.voice.setDeaf(false)
     }
-    
+    if(command === "undeathin"){
+        message.member.voice.setDeaf(false)
+    }
+    if(command === "undeathined"){
+        message.member.voice.setDeaf(false)
+    }
+
     //use utils
     utils.respondToMessage(message, client);
     if(command === "ping") {

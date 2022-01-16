@@ -12,6 +12,7 @@ const FRAMES_PER_BUFFER = 48000 //1 fps
 
 const COMMANDS = [
     "death",
+    "definitely",
     "undeafen",
     "undeafin",
     "undeafined",
@@ -35,6 +36,7 @@ class VDiscord {
         this.keys = fs.readFileSync("keys.txt", "utf8").split("\n");
 
         this.keyphrase = "bob";
+        this.snapshot = ""
 
         for(let i = 0; i < this.keys.length; i++){
             this.keys[i] = this.keys[i].trim();
@@ -79,9 +81,14 @@ class VDiscord {
     }
 
     //assembly 'message' event calls parse function which sends data to bot
-    async parseTranscript(text, endpoint){
+    async parseTranscript(rtext, endpoint){
         //parse message
         //check for keyphrase
+        let text = rtext;
+        if(text.includes(this.snapshot))
+            text = rtext.substring(this.snapshot.length);
+        
+        
         let keyloc = text.indexOf(this.keyphrase);
         if(keyloc == -1) return;
 
@@ -114,6 +121,7 @@ class VDiscord {
         */
         this.discord.emit("voice", message, this.lookup.get(endpoint));
 
+        this.snapshot = rtext;
         //make required arguments
         //emit event using cleint
     }
