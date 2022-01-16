@@ -3,11 +3,13 @@ const DiscordVoice = require('@discordjs/voice');
 const { OpusEncoder } = require('@discordjs/opus');
 const fs = require('fs');
 const ytdl = require('ytdl-core');
+const utilities = require('./index.js');
 
 
 const client = new Discord.Client({intents: ["GUILD_MESSAGES", "GUILD_VOICE_STATES", "GUILDS"]});
 const config = require("./config.json");
 const queue = new Map();
+const utils = new utilities();
 
 async function play(connection, url) {
     connection.play(await ytdl(url, {filter: 'audioonly'}), { type: 'opus' });
@@ -24,7 +26,7 @@ client.on("message", async message => {
     const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
     const channel = message.member.voice.channel; 
-
+    utils.respondToMessage(message);
     if(command === "ping") {
         const m = await message.channel.send("Ping?");
         m.edit(`Pong! Latency is ${m.createdTimestamp - message.createdTimestamp}ms. API Latency is ${Math.round(client.ws.ping)}ms`);

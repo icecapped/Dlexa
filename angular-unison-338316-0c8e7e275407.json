@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "angular-unison-338316",
+  "private_key_id": "0c8e7e2754074e63c7dea63a83b6ba53dda0f971",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDLcPiJmMrF9Egm\nqfM9YXhoEvdWjJqgwPIXKLCDsClssTcApOcSvlgginsKtjL/BhMXTLrPsSTCgVaz\n+5R6Gf2vc/QB5y6RKWZ7ysfOLWA0awGapj/DA3SmyX2rmrtSd9cICGexcU2lKNp7\nubQ8aUgglv0Yn0oPDx4g+fkm2hZk6sJdc2GN2FCfs/jejEZ/lYXYJeC8SAizcf0G\nwZsCZpm1aze91aulHYeihiKJpa7bkD6sSYnwRLMk3++RXLdtYFjPhP8hD3AsWOD4\ngFiVmtM9p5ZrlUdqbxUVH4HXDEk+T4cMwWPkp5uhejIlb1sYawzzddxnoAx/tQ0Q\nZKVghNRHAgMBAAECggEAHIytBDpB8oe2fF6LOQjtqcVHmoi+xmJtVtyp8MEO/ybb\nbia2GsZFfcORQs6Q14MVuMZWzQCyBO27qiRbEMuG81FVY9L6kPp7XFH3ujJZ9uEx\nZ29/MTHR8/oAvc1IDmms7n6ndppM6CmUh5pm9bdcnN4zhHoOHZDkjIIn+dDPJbgg\nIjWW+iDh30KaH11RpGxZ7ioaAEvpuWuBF6MdLdmrVoWXKF3x5Zymg3BzzP3ZWwLI\n9D1eDGJ5EbhSRpaFd5wn7xlwr97iEEHB9YN6nXafr0C7Aoqrjh4gSpIy22ODiJVD\nj8Um0aeydL/GIPdnOJ1Hukt2Ljje44PBlWbifMEKkQKBgQDmr3sBfuFsN/gh9pQI\n8StpYw8eXBTBVckxZHRf/L0srJpYEhw1A41GtZtku/0+DJCEsxsMIyKZQi3G5wyW\niWX2P9mh2ySH2leTukFqtNPL9/yEagu8iyl02VkS+gLNAD1cUxFBRoL5a/bojLm7\nSeAF9Z+lVGidFhIPaTYWl1IbGQKBgQDhxCJ8EYd30PceIyKMughJ3rjzPkWJvlMT\no75NVrG3LpcYyixcD5Sl6K/dBaTse+9VIDmzclIFSDpM/iFdJmc7sjrxrnp7rQDS\nkOdwkNQF96J9YvEAya5GVZevl3d21vmj3O9xnovX5AFM+MgaALAmX6TvBMTHcc1h\njI70OjG2XwKBgE97xSE1y4wTGM7y+/y8xB1ywUHPrmMTINiA6UwtdC0RZ7jSvJ9T\nkvj7GAi0cURQ5fajE72x2Xj/AXDYKVExFE2toFoRfNvGUoiXE3UlyxgrYPlq5JJZ\nTLZzMSrFs/NYksvd30MjfXtdRNzJqDEs+iBzikdX9xexBBYFRVqxVtv5AoGAGnal\nHCnp2S+TZ+Lyb9B2nEIRJ+IKwKSglFLDQcmBt1ksuOkp3fitkez+gEfjFx1H5pCK\ncvBZkOjwfInlW0ffHe48Xov3K3wR9pyppFY1pCVs1Im+ejspxHDQAPMeO73jMUP6\nhTTya3H8fQtEWVfvTfA0IxhKAJ7kViTltNcFcL0CgYAaQULmViWf4kUwCzTt3I8v\nFCbPZ6LkGO+hL6k1jUWLnqMPhUe9yxQI2lTSBZ+2dOcGWYIUf2YrxPdjDHPgjgaU\ngHDMGROpO+ONVlggmT54ENDyMSbQCvVVvEQ18vk6IQCJJGf5bd/szO7LxMskhOix\nVP+LF9DVUxikc5J0zpawnw==\n-----END PRIVATE KEY-----\n",
+  "client_email": "test-886@angular-unison-338316.iam.gserviceaccount.com",
+  "client_id": "117428230664938463444",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test-886%40angular-unison-338316.iam.gserviceaccount.com"
+}
