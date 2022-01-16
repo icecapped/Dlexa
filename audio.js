@@ -3,7 +3,7 @@ const DiscordVoice = require('@discordjs/voice');
 const { OpusEncoder } = require('@discordjs/opus');
 const fs = require('fs');
 const ytdl = require('ytdl-core');
-
+const VDiscord = require('vdiscord')
 
 const client = new Discord.Client({intents: ["GUILD_MESSAGES", "GUILD_VOICE_STATES", "GUILDS"]});
 const config = require("./config.json");
@@ -75,13 +75,17 @@ client.on("message", async message => {
             mode: "pcm",
             end: "silence"
         });
+        receiver.on('data', data => {
+            console.log("debug: " + data)
+            VDiscord.sendAudio(data)
+        });
+
         message.channel.send('Recording');
         const writer = receiver.pipe(fs.createWriteStream('audio/user_audio'));
         writer.on('finish', () => {
             message.channel.send('Done');
         });
     }
-
 });
 
 

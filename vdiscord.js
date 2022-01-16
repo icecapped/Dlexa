@@ -7,11 +7,13 @@ const RT_ENDPOINT  = "wss://api.assemblyai.com/v2/realtime/ws?sample_rate=16000"
 const FRAMES_PER_BUFFER = 12000 //4 fps
 
 
-class VDiscord {
+static class VDiscord {
     static client;
     static keys;
 
     static ws;
+
+    static buffer = Buffer.alloc(0);
 
     constructor(){
         this.keys = fs.readFileSync("keys.txt", "utf8").split("\n");
@@ -27,7 +29,7 @@ class VDiscord {
     }
 
 
-    initDiscord(){
+    initDiscord(client){
         this.client = new Discord.Client({intents: ["GUILD_MESSAGES", "GUILD_VOICE_STATES", "GUILDS"]});
 
         this.client.on("ready", () => {
@@ -54,17 +56,33 @@ class VDiscord {
     }
 
     //assembly 'message' event calls parse function which sends data to bot
-    parseTranscript(){
+    async parseTranscript(){
 
     }
 
     //discord 'join' event calls send function which starts sending audio
-    sendAudio(chunk){
+    async sendAudio(chunk){
+        this.buffer.write(chunk, "binary");
 
+        if(this.buffer.length / 4 >= FRAMES_PER_BUFFER){
+            const data = new Int16Array(buffer);
+            const ndata = new Int16Array(data.length/2);
+
+            for (let i = 0, j = 0; i < FRAMES_PER_BUFFER * 4; i+=4) {
+                ndata[j++] = data[i]
+                ndata[j++] = data[i+1]
+            }
+            
+            this.buffer = this.buffer.slice(FRAMES_PER_BUFFER * 4)
+            const mono = Buffer.from(ndata, "binary");
+
+
+            //send data to api
+        }
     }
 
     //stops send function
-    stopAudio(){
+    async stopAudio(){
 
     }
 
