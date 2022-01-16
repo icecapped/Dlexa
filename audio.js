@@ -1,24 +1,19 @@
 const Discord = require("discord.js");
 const DiscordVoice = require('@discordjs/voice');
-const speech = require('@google-cloud/speech');
 const { OpusEncoder } = require('@discordjs/opus');
 const fs = require('fs');
 const ytdl = require('ytdl-core');
 
 
 const client = new Discord.Client({intents: ["GUILD_MESSAGES", "GUILD_VOICE_STATES", "GUILDS"]});
-const speechClient = new speech.SpeechClient(); 
 const config = require("./config.json");
-const player = DiscordVoice.createAudioPlayer();
+const broadcast = client.voice.createBroadcast();
+const queue = new Map();
+
 stream = null;
 
-function joinVoice(channel){
-    return connection = joinVoiceChannel({
-        channelId: channel.id,
-        guildId: channel.guild.id,
-        adapterCreator: channel.guild.voiceAdapterCreator,
-        selfDeaf: false,
-    });
+async function play(connection, url) {
+    connection.play(await ytdl(url, {filter: 'audioonly'}), { type: 'opus' });
 }
 
 client.on("ready", () => {
@@ -32,115 +27,156 @@ client.on("message", async message => {
     const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
     const channel = message.member.voice.channel; 
-    
+
     if(command === "ping") {
         const m = await message.channel.send("Ping?");
         m.edit(`Pong! Latency is ${m.createdTimestamp - message.createdTimestamp}ms. API Latency is ${Math.round(client.ws.ping)}ms`);
     }
     
     if(command === "join") {
-        if (!message.member.voice.channel) return message.reply('Please join a voice channel first!');
-        if ((message.member.voice.channel.members.filter((e) => client.user.id === e.user.id).size > 0)) return message.reply(`I'm already in your voice channel!`);
+        if (!channel) return message.reply('Please join a voice channel first!');
+        if ((channel.members.filter((e) => client.user.id === e.user.id).size > 0)) return message.reply(`I'm already in your voice channel!`);
     
-        if (!message.member.voice.channel.joinable) return message.reply(`I don't have permission to join that voice channel!`);
-        if (!message.member.voice.channel.speakable) return message.reply(`I don't have permission to speak in that voice channel!`);
+        if (!channel.joinable) return message.reply(`I don't have permission to join that voice channel!`);
+        if (!channel.speakable) return message.reply(`I don't have permission to speak in that voice channel!`);
 
         if (channel) {
             const connection = await channel.join();
-
             const receiver = connection.receiver.createStream(message.member, {
                 mode: "pcm",
                 end: "silence"
-              });
+            });
+            message.channel.send('Recording');
             const writer = receiver.pipe(fs.createWriteStream('audio/user_audio'));
             writer.on('finish', () => {
                 channel.leave();
-                message.channel.send('It went quiet, so I left...');
-            });
-            
-        }
-        
-        
-    }
-
-    //play youtube video
-    if(command === "play"){
-        if ((message.member.voice.channel.members.filter((e) => client.user.id === e.user.id).size == 0)){
-            if (channel) {
-                const connection = await channel.join();
-            }
+                message.channel.send('Left');
+            });  
         } 
-
-        const url = args[0];
-
-        if(!url) return message.reply('No url');
-        const stream = ytdl(url, {filter: 'audioonly'});
-        const resource = DiscordVoice.createAudioResource(stream);
-
-        player.play(resource);
-        const connection = getVoiceConnection(channel.guild.id);
-        connection.subscribe(player);
-        message.reply('Playing music');
     }
 
-    //stop player
-    if(command === "stop"){
-        player.stop();
-    }
+    const serverQueue = queue.get(message.guild.id);
+
+    if (command === "play") {
+        execute(message, serverQueue);
+        return;
+      } else if (command === "skip") {
+        skip(message, serverQueue);
+        return;
+      } else if (command === "stop") {
+        stop(message, serverQueue);
+        return;
+      } 
 
     //leave call
     if(command === "leave") {
         if ((message.member.voice.channel.members.filter((e) => client.user.id === e.user.id).size == 0)) return message.reply(`I already left`);
-        const connection = client.getVoiceConnection(channel.guild.id);
-
-        connection.leave();    
+        channel.leave();    
     }
     
     if(command === "record"){
         if(!channel) return message.channel.send('Join a VC first!');
+        const connection = client.voice.connections.get(message.member.guild.id);
 
-        const connection = joinVoice(channel);
-        const receiver = new DiscordVoice.VoiceReceiver(connection);
-        stream = receiver.subscribe("165218817025245186");
-        stream.pipe(fs.createWriteStream('user_audio'))
-        console.log()
-        stream.on('data', data => {
-            let chunk;
-            console.log('Stream is readable (new data received in buffer)');
-            
+        const receiver = connection.receiver.createStream(message.member, {
+            mode: "pcm",
+            end: "silence"
+        });
+        message.channel.send('Recording');
+        const writer = receiver.pipe(fs.createWriteStream('audio/user_audio'));
+        writer.on('finish', () => {
+            channel.leave();
+            message.channel.send('Left');
         });
     }
 
-    if(command === "pause"){
-        stream.pause();
-        console.log("CALLED")
-
-        
-        stream.on('end', () => {
-            console.log('Reached end of stream.');
-        });
-    }
-    if(command === "test"){
-        console.log("start");
-        const ffmpeg = require('ffmpeg');
-
-        try {
-            console.log("process start");
-            var process = new ffmpeg('audio/user_audio');
-            
-            process.then(function (audio) {
-                audio.fnExtractSoundToMP3('audio/file.mp3', function (error, file) {
-                if (!error) console.log('Audio File: ' + file);
-                });
-            }, function (err) {
-                console.log('Error: ' + err);      
-            });
-            } catch (e) {
-            console.log(e);
-            }
-        console.log("process end");
-    }
 });
+
+
+
+
+async function execute(message, serverQueue) {
+    const args = message.content.split(" ");
+  
+    const voiceChannel = message.member.voice.channel;
+    if (!voiceChannel)
+        return message.channel.send("You need to be in a voice channel to play music!");
+    const permissions = voiceChannel.permissionsFor(message.client.user);
+    if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
+        return message.channel.send("I need the permissions to join and speak in your voice channel!");
+    }
+  
+    const songInfo = await ytdl.getInfo(args[1]);
+    const song = {
+          title: songInfo.videoDetails.title,
+          url: songInfo.videoDetails.video_url,
+     };
+  
+    if (!serverQueue) {
+        const queueContruct = {
+        textChannel: message.channel,
+        voiceChannel: voiceChannel,
+        connection: null,
+        songs: [],
+        volume: 5,
+        playing: true
+        };
+  
+        queue.set(message.guild.id, queueContruct);
+    
+        queueContruct.songs.push(song);
+    
+        try {
+            var connection = await voiceChannel.join();
+            queueContruct.connection = connection;
+            play(message.guild, queueContruct.songs[0]);
+        } catch (err) {
+            console.log(err);
+            queue.delete(message.guild.id);
+            return message.channel.send(err);
+        }
+    } else {
+      serverQueue.songs.push(song);
+      return message.channel.send(`${song.title} has been added to the queue!`);
+    }
+}
+  
+function skip(message, serverQueue) {
+    if (!message.member.voice.channel)
+        return message.channel.send("You have to be in a voice channel to stop the music!");
+    if (!serverQueue)
+        return message.channel.send("There is no song that I could skip!");
+    serverQueue.connection.dispatcher.end();
+}
+  
+function stop(message, serverQueue) {
+    if (!message.member.voice.channel)
+        return message.channel.send("You have to be in a voice channel to stop the music!");
+      
+    if (!serverQueue)return message.channel.send("There is no song that I could stop!");
+      
+    serverQueue.songs = [];
+    serverQueue.connection.dispatcher.end();
+}
+  
+function play(guild, song) {
+    const serverQueue = queue.get(guild.id);
+    if (!song) {
+        serverQueue.voiceChannel.leave();
+        queue.delete(guild.id);
+        return;
+    }
+  
+    const dispatcher = serverQueue.connection
+        .play(ytdl(song.url))
+        .on("finish", () => {
+        serverQueue.songs.shift();
+        play(guild, serverQueue.songs[0]);
+        })
+        .on("error", error => console.error(error));
+    dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
+    serverQueue.textChannel.send(`Start playing: **${song.title}**`);
+}
 
 
 
