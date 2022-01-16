@@ -1,4 +1,7 @@
 {
 	"prefix": "*",
+	"discord_token": "",
+	"weather_token": "",
+	"search_token": "",
 	"token": ""
 }
