@@ -3,12 +3,24 @@ const console = require("console");
 const fs = require("fs");
 const ws = require("ws");
 const axios = require('axios');
-const EventEmitter = require('events')
+const EventEmitter = require('events');
 
+const config = require("./config.json");
 const TOKEN_ENDPOINT = "https://api.assemblyai.com/v2/realtime/token";
 const RT_ENDPOINT  = "wss://api.assemblyai.com/v2/realtime/ws?sample_rate=48000&token="
 const FRAMES_PER_BUFFER = 48000 //1 fps
 
+const COMMANDS = [
+    "death",
+    "undeafen",
+    "undeafin",
+    "undeafined",
+    "skip",
+    "stop",
+    "leave",
+    "translate",
+    "weather"
+];
 
 class VDiscord {
     static client;
@@ -18,6 +30,7 @@ class VDiscord {
 
     constructor(client){
         this.users = new Map();
+        this.lookup = new Map();
         this.buffer = Buffer.alloc(0);
         this.keys = fs.readFileSync("keys.txt", "utf8").split("\n");
 
@@ -43,16 +56,18 @@ class VDiscord {
     }
 
     initAssembly(){
+        /*
         //receive transcription handling
         this.ws.onmessage = (message) => {
             //if(message.data == undefined);
             const info = JSON.parse(message.data);
+            const id = 
             console.log("Transcription received. " + info)
 
-            //TODO: parse transcription 
+
             this.parseTranscript(info.text);
         };
-        console.log("Finished assembly ai initialization");
+        console.log("Finished assembly ai initialization");*/
     }
 
     async newToken(){
@@ -64,29 +79,55 @@ class VDiscord {
     }
 
     //assembly 'message' event calls parse function which sends data to bot
-    async parseTranscript(text){
+    async parseTranscript(text, endpoint){
         //parse message
-        let keyloc = text.indexOf(keyphrase);
-
+        //check for keyphrase
+        let keyloc = text.indexOf(this.keyphrase);
         if(keyloc == -1) return;
 
-        //go through every command
-        if(text.includes("ready")){
-
+        //check for valid command
+        let message = null;
+        for(const str of COMMANDS){
+            if(text.includes(str)){
+                message = str;
+                break;
+            }
         }
+
+        
+        if(message == null) return;
+        /*
+        console.log(this.discord.yep);
+        messageObject = new Discord.Message(this.discord, {
+            id: this.discord.yep,
+            content: config.prefix + message,
+            author: null,
+            pinned: false,
+            tts: null,
+            embeds: null,
+            attachments: null,
+            nonce: "",
+            channel: this.discord.chan,
+            guild: this.discord.guild,
+            member: this.lookup.get(endpoint)
+        }, this.discord.chan)
+        */
+        this.discord.emit("voice", message, this.lookup.get(endpoint));
+
         //make required arguments
         //emit event using cleint
     }
 
 
     //discord 'join' event calls send function which starts sending audio
-    async sendAudio(chunk, username){
+    async sendAudio(chunk, user){
         this.buffer = Buffer.concat([this.buffer, chunk]);
+        let username = user.user.username;
 
         if(this.buffer.length / 2 >= FRAMES_PER_BUFFER){
             console.log("1 second")
 
-            if(!this.users.has(username)){
+            if(!this.users.has(user)){
                 let promise = this.newToken();
                 promise.then((value) =>{
                     let endpoint = RT_ENDPOINT + value;
@@ -96,12 +137,17 @@ class VDiscord {
                         const info = JSON.parse(message.data);
                         //console.log("Transcription received. ", info)
                         console.log(info.text);
+                        //TODO: parse transcription
+                        
+                        if(typeof info.text != "undefined")
+                            this.parseTranscript(info.text, endpoint);
                     }
                     console.log("NEW USER: ", username, "||", endpoint);
-                    this.users.set(username, rtSocket);
+                    this.users.set(user, rtSocket);
+                    this.lookup.set(endpoint, user);
                 });
 
-                this.users.set(username, null);
+                this.users.set(user, null);
             }
 
             let slice = this.buffer.slice(0, FRAMES_PER_BUFFER*2);
@@ -125,12 +171,12 @@ class VDiscord {
             //rtSocket = new WebSocket(endpoint);
 
             //wait for websocket to open
-            while(this.users.get(username) == null || this.users.get(username).readyState == 0){
+            while(this.users.get(user) == null || this.users.get(user).readyState == 0){
                 await new Promise(r => setTimeout(r, 100));
 
             }
             //console.log(this.users.get(username).readyState);
-            let response = await this.users.get(username).send(JSON.stringify({
+            let response = await this.users.get(user).send(JSON.stringify({
                 audio_data: mono.toString('base64'), 
                 word_boost: [this.keyphrase],
                 format_text: false
@@ -140,7 +186,7 @@ class VDiscord {
     }
 
     //manually flushes/pushes buffer
-    async finished(username){
+    async finished(user){
         let slice = this.buffer.slice(0);
         this.buffer = this.buffer.slice(buffer.length);
 
@@ -154,7 +200,7 @@ class VDiscord {
         
         const mono = Buffer.from(ndata, "binary");
 
-        this.users.get(username).send(JSON.stringify({
+        this.users.get(user).send(JSON.stringify({
             audio_data: mono.toString('base64'), 
             word_boost: [this.keyphrase],
             format_text: false

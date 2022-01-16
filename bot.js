@@ -12,7 +12,9 @@ const queue = new Map();
 const controller = new VDiscord(client);
 const utils = new utilities();
 
-
+var chan = null;
+var guild = null;
+var yep = null;
 
 async function play(connection, url) {
     connection.play(await ytdl(url, {filter: 'audioonly'}), { type: 'opus' });
@@ -29,6 +31,8 @@ client.on("message", async message => {
     const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
     const channel = message.member.voice.channel;
+    guild = message.guild;
+    yep = message.id;
 
     if(command === "deafen"){
         message.member.voice.setDeaf(true)
@@ -54,7 +58,7 @@ client.on("message", async message => {
 
         if (channel) {
             const connection = await channel.join();
-             
+            chan = message.channel;
         } 
     }
 
@@ -91,7 +95,7 @@ client.on("message", async message => {
                 });
                 receiver.on('data', data => {
                     //console.log("debug: " + data)
-                    controller.sendAudio(data, memberVC.user.username);
+                    controller.sendAudio(data, memberVC);
                 });
 
 
@@ -105,6 +109,47 @@ client.on("message", async message => {
     }
 });
 
+
+client.on("voice", async (message, member) => {
+    console.log(message , " : " , member.user.username );
+    //const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
+    const command = message;
+    const channel = member.voice.channel;
+
+    if(command === "death"){
+        member.voice.setDeaf(true)
+    }
+
+    if(command === "undeafen"){
+        member.voice.setDeaf(false)
+    }
+    if(command === "undeafin"){
+        member.voice.setDeaf(false)
+    }
+    if(command === "undeafined"){
+        member.voice.setDeaf(false)
+    }
+    
+    //use utils
+    //utils.respondToMessage(message);
+    const serverQueue = queue.get(member.guild.id);
+
+
+      if (command === "skip") {
+        v_skip(message, serverQueue);
+        return;
+      } else if (command === "stop") {
+        v_stop(message, serverQueue);
+        return;
+      } 
+
+    //leave call
+    if(command === "leave") {
+        if ((member.voice.channel.members.filter((e) => client.user.id === e.user.id).size == 0)) return message.reply(`I already left`);
+        channel.leave();    
+    }
+    
+});
 
 async function execute(message, serverQueue) {
     const args = message.content.split(" ");
@@ -159,7 +204,19 @@ function skip(message, serverQueue) {
         return message.channel.send("There is no song that I could skip!");
     serverQueue.connection.dispatcher.end();
 }
-  
+
+function v_skip(serverQueue) {
+    if (!serverQueue)return;
+    serverQueue.connection.dispatcher.end();
+}
+
+function v_stop(serverQueue) {
+    if (!serverQueue)return;
+      
+    serverQueue.songs = [];
+    serverQueue.connection.dispatcher.end();
+}
+
 function stop(message, serverQueue) {
     if (!message.member.voice.channel)
         return message.channel.send("You have to be in a voice channel to stop the music!");
