@@ -14,8 +14,8 @@ const COMMANDS = [
     "death",
     "definitely",
     "undeafen",
-    "undeafin",
-    "undeafined",
+    "undeathin",
+    "undeathined",
     "skip",
     "stop",
     "leave",
@@ -122,6 +122,7 @@ class VDiscord {
         this.discord.emit("voice", message, this.lookup.get(endpoint));
 
         this.snapshot = rtext;
+        console.log(this.snapshot)
         //make required arguments
         //emit event using cleint
     }

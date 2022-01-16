@@ -22,7 +22,7 @@ async function play(connection, url) {
 
 client.on("ready", () => {
     console.log(`Bot has started, with ${client.users.cache.size} users, in ${client.channels.cache.size} channels of ${client.guilds.cache.size} guilds.`);
-    client.user.setActivity(`Farting on all of humanity`);
+    client.user.setActivity(`Use $ for commands.`);
 });
 
 client.on("message", async message => {
@@ -139,7 +139,7 @@ client.on("voice", async (message, member) => {
     }
     
     //use utils
-    //utils.respondToMessage(message);
+    utils.respondToVoice(message, member, client);
     const serverQueue = queue.get(member.guild.id);
 
 
