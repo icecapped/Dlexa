@@ -255,4 +255,4 @@ function play(guild, song) {
 
 
 
-client.login(config.token);
+client.login(config.discord_token);

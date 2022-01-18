@@ -8,7 +8,7 @@ const EventEmitter = require('events');
 const config = require("./config.json");
 const TOKEN_ENDPOINT = "https://api.assemblyai.com/v2/realtime/token";
 const RT_ENDPOINT  = "wss://api.assemblyai.com/v2/realtime/ws?sample_rate=48000&token="
-const FRAMES_PER_BUFFER = 48000 //1 fps
+const FRAMES_PER_BUFFER = 48000 //1 fps? actually a lot faster
 
 const COMMANDS = [
     "death",
@@ -44,14 +44,6 @@ class VDiscord {
         this.buffers = new Map();
         this.snapshots = new Map();
 
-        this.keys = fs.readFileSync("keys.txt", "utf8").split("\n");
-
-        this.keyphrase = "alexa";
-
-        for(let i = 0; i < this.keys.length; i++){
-            this.keys[i] = this.keys[i].trim();
-        }
-        console.log(this.keys);
 
         console.log("Initializing discord");
         this.initDiscord(client);
@@ -85,7 +77,7 @@ class VDiscord {
     async newToken(){
         const response = await axios.post(TOKEN_ENDPOINT, // use account token to get a temp user token
         { expires_in: 3600 }, // can set a TTL timer in seconds. (TODO: refresh tokens)
-        { headers: { authorization: "678413c8390c4594a5e172101e216bad" } }); // AssemblyAI API Key goes here
+        { headers: { authorization: config.assembly_token } }); // AssemblyAI API Key goes here
         console.log("DATA: ", response.data.token);
         return response.data.token;
     }
