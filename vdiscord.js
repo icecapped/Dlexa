@@ -19,6 +19,7 @@ const COMMANDS = [
     "undeffin",
     "undeffin",
     "undeafen",
+    "undeffin",
     "undeathin",
     "undeathined",
     "undefined",
@@ -40,11 +41,12 @@ class VDiscord {
     constructor(client){
         this.users = new Map();
         this.lookup = new Map();
-        this.buffer = Buffer.alloc(0);
+        this.buffers = new Map();
+        this.snapshots = new Map();
+
         this.keys = fs.readFileSync("keys.txt", "utf8").split("\n");
 
-        this.keyphrase = "bob";
-        this.snapshot = ""
+        this.keyphrase = "alexa";
 
         for(let i = 0; i < this.keys.length; i++){
             this.keys[i] = this.keys[i].trim();
@@ -93,8 +95,8 @@ class VDiscord {
         //parse message
         //check for keyphrase
         let text = rtext;
-        if(text.includes(this.snapshot))
-            text = rtext.substring(this.snapshot.length);
+        if(text.includes(this.snapshots.get(endpoint)))
+            text = rtext.substring(this.snapshots.get(endpoint).length);
         
         
         let keyloc = text.toLowerCase().indexOf(this.keyphrase);
@@ -129,8 +131,8 @@ class VDiscord {
         */
         this.discord.emit("voice", message, this.lookup.get(endpoint));
 
-        this.snapshot = rtext;
-        console.log(this.snapshot)
+        this.snapshots.set(endpoint, rtext);
+        console.log(this.snapshots.get())
         //make required arguments
         //emit event using cleint
     }
@@ -138,37 +140,42 @@ class VDiscord {
 
     //discord 'join' event calls send function which starts sending audio
     async sendAudio(chunk, user){
-        this.buffer = Buffer.concat([this.buffer, chunk]);
         let username = user.user.username;
+        if(!this.users.has(user)){
+            let promise = this.newToken();
+            promise.then((value) =>{
+                let endpoint = RT_ENDPOINT + value;
+                var rtSocket = new ws.WebSocket(endpoint);
 
-        if(this.buffer.length / 2 >= FRAMES_PER_BUFFER){
+                rtSocket.onmessage = (message) => {
+                    const info = JSON.parse(message.data);
+                    //console.log("Transcription received. ", info)
+                    console.log(info.text);
+                    //TODO: parse transcription
+                    
+                    if(typeof info.text != "undefined")
+                        this.parseTranscript(info.text, endpoint);
+                    
+                }
+                console.log("NEW USER: ", username, "||", endpoint);
+                this.users.set(user, rtSocket);
+                this.lookup.set(endpoint, user);
+            });
+
+            this.buffers.set(user, Buffer.alloc(0));
+            this.users.set(user, null);
+        }
+
+        this.buffers.set(user, Buffer.concat([this.buffers.get(user), chunk]));
+
+        if(this.buffers.get(user).length / 2 >= FRAMES_PER_BUFFER){
             console.log("1 second")
 
-            if(!this.users.has(user)){
-                let promise = this.newToken();
-                promise.then((value) =>{
-                    let endpoint = RT_ENDPOINT + value;
-                    var rtSocket = new ws.WebSocket(endpoint);
+            
 
-                    rtSocket.onmessage = (message) => {
-                        const info = JSON.parse(message.data);
-                        //console.log("Transcription received. ", info)
-                        console.log(info.text);
-                        //TODO: parse transcription
-                        
-                        if(typeof info.text != "undefined")
-                            this.parseTranscript(info.text, endpoint);
-                    }
-                    console.log("NEW USER: ", username, "||", endpoint);
-                    this.users.set(user, rtSocket);
-                    this.lookup.set(endpoint, user);
-                });
 
-                this.users.set(user, null);
-            }
-
-            let slice = this.buffer.slice(0, FRAMES_PER_BUFFER*2);
-            this.buffer = this.buffer.slice(FRAMES_PER_BUFFER * 2);
+            let slice = this.buffers.get(user).slice(0, FRAMES_PER_BUFFER*2);
+            this.buffers.set(user, this.buffers.get(user).slice(FRAMES_PER_BUFFER * 2));
 
             const data = new Int16Array(slice);
             const ndata = new Int16Array(data.length/2);
@@ -190,12 +197,12 @@ class VDiscord {
             //wait for websocket to open
             while(this.users.get(user) == null || this.users.get(user).readyState == 0){
                 await new Promise(r => setTimeout(r, 100));
-
             }
+
             //console.log(this.users.get(username).readyState);
             let response = await this.users.get(user).send(JSON.stringify({
                 audio_data: mono.toString('base64'), 
-                word_boost: [this.keyphrase],
+                word_boost: [this.keyphrase, "deafen", "undeafen", "undeafin"],
                 format_text: false
             }));
             //console.log("response: " + response); //  + "  ws:",this.ws
@@ -204,8 +211,8 @@ class VDiscord {
 
     //manually flushes/pushes buffer
     async finished(user){
-        let slice = this.buffer.slice(0);
-        this.buffer = this.buffer.slice(buffer.length);
+        let slice = this.buffers.get(user).slice(0);
+        this.buffers.get(user) = this.buffers.get(user).slice(buffer.length);
 
         const data = new Int16Array(slice);
         const ndata = new Int16Array(data.length/2);
