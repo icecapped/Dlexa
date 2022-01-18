@@ -55,8 +55,6 @@ class VDiscord {
 
     initDiscord(client){
         this.discord = client;
-
-        client.emitter
     }
 
     initAssembly(){
@@ -76,7 +74,7 @@ class VDiscord {
 
     async newToken(){
         const response = await axios.post(TOKEN_ENDPOINT, // use account token to get a temp user token
-        { expires_in: 3600 }, // can set a TTL timer in seconds. (TODO: refresh tokens)
+        { expires_in: 3600 }, // can set a TTL timer in seconds. (TODO: system for refreshing tokens)
         { headers: { authorization: config.assembly_token } }); // AssemblyAI API Key goes here
         console.log("DATA: ", response.data.token);
         return response.data.token;
@@ -106,6 +104,9 @@ class VDiscord {
         
         if(message == null) return;
         /*
+        Attempt at fabricating DiscordMessage object. does not work
+        TODO: make 
+
         console.log(this.discord.yep);
         messageObject = new Discord.Message(this.discord, {
             id: this.discord.yep,
@@ -141,10 +142,11 @@ class VDiscord {
 
                 rtSocket.onmessage = (message) => {
                     const info = JSON.parse(message.data);
-                    //console.log("Transcription received. ", info)
-                    console.log(info.text);
-                    //TODO: parse transcription
                     
+                    //print transcript for debug
+                    console.log(info.text)
+                    
+
                     if(typeof info.text != "undefined")
                         this.parseTranscript(info.text, endpoint);
                     
@@ -161,10 +163,6 @@ class VDiscord {
         this.buffers.set(user, Buffer.concat([this.buffers.get(user), chunk]));
 
         if(this.buffers.get(user).length / 2 >= FRAMES_PER_BUFFER){
-            console.log("1 second")
-
-            
-
 
             let slice = this.buffers.get(user).slice(0, FRAMES_PER_BUFFER*2);
             this.buffers.set(user, this.buffers.get(user).slice(FRAMES_PER_BUFFER * 2));
@@ -179,25 +177,19 @@ class VDiscord {
             
             const mono = Buffer.from(ndata, "binary");
             //fs.appendFileSync("testfile",mono);
+            //Audio bitstream debugging
 
-            //console.log(mono)
-            //send data to api
-
-            //endpoint = RT_ENDPOINT + this.users.get(username);
-            //rtSocket = new WebSocket(endpoint);
-
-            //wait for websocket to open
+            //Wait for websocket to open
             while(this.users.get(user) == null || this.users.get(user).readyState == 0){
                 await new Promise(r => setTimeout(r, 100));
             }
 
-            //console.log(this.users.get(username).readyState);
+            //Send audio stream to AssemblyAI
             let response = await this.users.get(user).send(JSON.stringify({
                 audio_data: mono.toString('base64'), 
                 word_boost: [this.keyphrase, "deafen", "undeafen", "undeafin"],
                 format_text: false
             }));
-            //console.log("response: " + response); //  + "  ws:",this.ws
         }
     }
 
@@ -220,9 +212,7 @@ class VDiscord {
             audio_data: mono.toString('base64'), 
             word_boost: [this.keyphrase],
             format_text: false
-        }));
-
-        
+        }));        
     }
 
 }
