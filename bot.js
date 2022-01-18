@@ -33,20 +33,12 @@ client.on("message", async message => {
     guild = message.guild;
     yep = message.id;
 
-    if(command === "death"){
+    if(command === "deafen"){
         message.member.voice.setDeaf(true)
     }
-    if(command === "definitely"){
-        message.member.voice.setDeaf(true)
-    }
+    
 
     if(command === "undeafen"){
-        message.member.voice.setDeaf(false)
-    }
-    if(command === "undeathin"){
-        message.member.voice.setDeaf(false)
-    }
-    if(command === "undeathined"){
         message.member.voice.setDeaf(false)
     }
 
@@ -124,17 +116,10 @@ client.on("voice", async (message, member) => {
     const command = message;
     const channel = member.voice.channel;
 
-    if(command === "death"){
+    if(command === "death" || command === "deafen" || command === "deaf" || command === "definitely" || command === "defin"){
         member.voice.setDeaf(true)
     }
-
-    if(command === "undeafen"){
-        member.voice.setDeaf(false)
-    }
-    if(command === "undeafin"){
-        member.voice.setDeaf(false)
-    }
-    if(command === "undeafined"){
+    else if(command === "undeafen" || command === "undeafin" || command === "undefin" || command === "undefinly" || command === "undeafined" || command === "undeffin" || command === "undefined"){
         member.voice.setDeaf(false)
     }
     
@@ -143,13 +128,13 @@ client.on("voice", async (message, member) => {
     const serverQueue = queue.get(member.guild.id);
 
 
-      if (command === "skip") {
+    if (command === "skip") {
         v_skip(message, serverQueue);
         return;
-      } else if (command === "stop") {
+    } else if (command === "stop") {
         v_stop(message, serverQueue);
         return;
-      } 
+    } 
 
     //leave call
     if(command === "leave") {

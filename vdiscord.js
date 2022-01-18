@@ -13,9 +13,17 @@ const FRAMES_PER_BUFFER = 48000 //1 fps
 const COMMANDS = [
     "death",
     "definitely",
+    "deafen",
+    "deaf",
+    "defin",
+    "undeffin",
+    "undeffin",
     "undeafen",
     "undeathin",
     "undeathined",
+    "undefined",
+    "undefinly",
+    "undefin",
     "skip",
     "stop",
     "leave",
@@ -89,7 +97,7 @@ class VDiscord {
             text = rtext.substring(this.snapshot.length);
         
         
-        let keyloc = text.indexOf(this.keyphrase);
+        let keyloc = text.toLowerCase().indexOf(this.keyphrase);
         if(keyloc == -1) return;
 
         //check for valid command

@@ -77,7 +77,7 @@ class utilities{
             try{
                 const city = tokens[1];
                 axios.get("http://api.openweathermap.org/data/2.5/weather?q=" + city + "&units=metric&appid=" + config.weather_token).then(resp =>{
-                    const output = "Temp is " + resp.data.main.temp + " C, feels like " + resp.data.main.feels_like + " C, " + resp.data.weather[0].description + ".";
+                    const output = "The temperature is " + resp.data.main.temp + " C, feels like " + resp.data.main.feels_like + " C, " + resp.data.weather[0].description + ".";
                     const m = message.channel.send(output);
                     this.texttomp3(tts, output, message.member);
                 });
@@ -158,7 +158,7 @@ class utilities{
             try{
                 const city = "toronto";
                 axios.get("http://api.openweathermap.org/data/2.5/weather?q=" + city + "&units=metric&appid=" + config.weather_token).then(resp =>{
-                    const output = "Temp is " + resp.data.main.temp + " C, feels like " + resp.data.main.feels_like + " C, " + resp.data.weather[0].description + ".";
+                    const output = "The temperature is " + resp.data.main.temp + " degrees celcius, and feels like " + resp.data.main.feels_like + " degrees celcius. There are " + resp.data.weather[0].description + ".";
                     this.texttomp3(tts, output, member);
                 });
             }
