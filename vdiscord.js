@@ -178,7 +178,7 @@ class VDiscord {
             }
             
             const mono = Buffer.from(ndata, "binary");
-            fs.appendFileSync("testfile",mono);
+            //fs.appendFileSync("testfile",mono);
 
             //console.log(mono)
             //send data to api

@@ -102,10 +102,10 @@ client.on("message", async message => {
                 message.channel.send('Recording for ' + memberVC.user.username);
 
                 /*
-                const writer = receiver.pipe(fs.createWriteStream('audio/'+memberVC.user.username+'audio'));*/
+                const writer = receiver.pipe(fs.createWriteStream('audio/'+memberVC.user.username+'audio'));
                 writer.on('finish', () => {
                     message.channel.send('Done for ' + memberVC.user.username);
-                });
+                });*/
             }
         })
     }
