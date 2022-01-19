@@ -10,10 +10,6 @@ const queue = new Map();
 const controller = new VDiscord(client);
 const utils = new utilities();
 
-var chan = null;
-var guild = null;
-var yep = null;
-
 async function play(connection, url) {
     connection.play(await ytdl(url, {filter: 'audioonly'}), { type: 'opus' });
 }
@@ -28,8 +24,6 @@ client.on("message", async message => {
     const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
     const channel = message.member.voice.channel;
-    guild = message.guild;
-    yep = message.id;
 
     if(command === "deafen"){
         message.member.voice.setDeaf(true)
