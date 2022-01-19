@@ -148,7 +148,7 @@ class VDiscord {
                     console.log(info.text)
                     
 
-                    if(typeof info.text != "undefined")
+                    if(typeof info.text != "undefined" && info.message_type == 'PartialTranscript')
                         this.parseTranscript(info.text, endpoint);
                     
                 }
