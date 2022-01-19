@@ -1,6 +1,4 @@
 const Discord = require("discord.js");
-const DiscordVoice = require('@discordjs/voice');
-const { OpusEncoder } = require('@discordjs/opus');
 const fs = require('fs');
 const ytdl = require('ytdl-core');
 const VDiscord = require('./vdiscord.js');
@@ -60,6 +58,11 @@ client.on("message", async message => {
             const connection = await channel.join();
             chan = message.channel;
         } 
+
+        process.on('exit', err => {
+            if(channel)
+                channel.disconnect();
+        });
     }
 
     const serverQueue = queue.get(message.guild.id);
@@ -252,7 +255,6 @@ function play(guild, song) {
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
     serverQueue.textChannel.send(`Start playing: **${song.title}**`);
 }
-
 
 
 client.login(config.discord_token);
