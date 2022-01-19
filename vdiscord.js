@@ -44,6 +44,7 @@ class VDiscord {
         this.buffers = new Map();
         this.snapshots = new Map();
 
+        this.keyphrase = "alexa";
 
         console.log("Initializing discord");
         this.initDiscord(client);
