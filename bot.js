@@ -29,7 +29,7 @@ client.on("ready", () => {
 client.on("message", async (message) => {
     if (isAddingPlaylist.get(message.guild.id) === undefined) {
         isAddingPlaylist.set(message.guild.id, false);
-        clearQueue.set(message.guild.id);
+        clearQueue.set(message.guild.id, false);
     }
     if (!message.content.startsWith(config.prefix)) return;
     const args = message.content
@@ -227,65 +227,72 @@ async function execute(message, serverQueue) {
     if (args[1].includes("playlist")) {
         try {
             const playlistID = args[1].split("list=")[1];
-            const songLimit = 50;
+            const songLimit = Infinity;
             const playlist = await ytpl(playlistID, { limit: songLimit });
             const songCount = playlist.estimatedItemCount;
-            message.channel.send(`Playing playlist: **${playlist.title}**`);
+            message.channel.send(
+                `Playing ${songCount} songs from: **${playlist.title}**`
+            );
             var songsAdded = 0;
             //UnhandledPromiseRejectionWarning error for addingplaylist and clearqueue
-            // isAddingPlaylist.set(message.guild.id, true);
-            for (var songNum = 0; songNum < songCount; songNum++) {
-                console.log(clearQueue.get(message, guild.id));
-                // if (clearQueue.get(message, guild.id)) {
-                //     isAddingPlaylist.set(message.guild.id, false);
-                //     clearQueue.set(message.guild.id, false);
-                //     break;
-                // }
-                if (playlist.items[songNum] != undefined) {
+            isAddingPlaylist.set(message.guild.id, true);
+            for (const currentSong of playlist.items) {
+                if (clearQueue.get(message.guild.id)) {
+                    break;
+                }
+                if (
+                    currentSong != undefined &&
+                    !clearQueue.get(message.guild.id)
+                ) {
                     songsAdded++;
-                    const songURL = playlist.items[songNum].url;
+                    const songURL = currentSong.url;
                     const songInfo = await ytdl.getInfo(songURL);
                     const song = {
                         title: songInfo.videoDetails.title,
                         url: songInfo.videoDetails.video_url,
                     };
-                    if (!queue.get(message.guild.id)) {
-                        const queueContruct = {
-                            textChannel: message.channel,
-                            voiceChannel: voiceChannel,
-                            connection: null,
-                            songs: [],
-                            volume: 5,
-                            playing: true,
-                        };
+                    if (!clearQueue.get(message.guild.id)) {
+                        if (!queue.get(message.guild.id)) {
+                            const queueContruct = {
+                                textChannel: message.channel,
+                                voiceChannel: voiceChannel,
+                                connection: null,
+                                songs: [],
+                                volume: 5,
+                                playing: true,
+                            };
+                            queue.set(message.guild.id, queueContruct);
 
-                        queue.set(message.guild.id, queueContruct);
+                            queueContruct.songs.push(song);
 
-                        queueContruct.songs.push(song);
-
-                        try {
-                            var connection = await voiceChannel.join();
-                            queueContruct.connection = connection;
-                            play(message.guild, queueContruct.songs[0]);
-                        } catch (err) {
-                            console.log(err);
-                            queue.delete(message.guild.id);
-                            return message.channel.send(err);
+                            try {
+                                var connection = await voiceChannel.join();
+                                queueContruct.connection = connection;
+                                play(message.guild, queueContruct.songs[0]);
+                            } catch (err) {
+                                console.log(err);
+                                queue.delete(message.guild.id);
+                                return message.channel.send(err);
+                            }
+                        } else {
+                            queue.get(message.guild.id).songs.push(song);
+                            console.log("addedToQ " + currentSong.url);
+                            await sleep(500);
                         }
-                    } else {
-                        await sleep(100);
-                        queue.get(message.guild.id).songs.push(song);
-                        console.log("addedToQ " + songNum);
                     }
                 }
             }
             isAddingPlaylist.set(message.guild.id, false);
-
-            return message.channel.send(
-                `${songsAdded} songs have been added to the queue!`
-            );
+            if (clearQueue.get(message.guild.id)) {
+                clearQueue.set(message.guild.id, false);
+                return message.channel.send(`Queue cancelled`);
+            } else {
+                return message.channel.send(
+                    `${songsAdded} songs have been added to the queue!`
+                );
+            }
         } catch (error) {
-            return message.channel.send(error);
+            return message.channel.send("Error queue failed");
         }
     } else {
         const songInfo = await ytdl.getInfo(args[1]);
@@ -371,14 +378,20 @@ function play(guild, song) {
         queue.delete(guild.id);
         return;
     }
+    let stream = ytdl(song.url, {
+        filter: "audioonly",
+        opusEncoded: false,
+        fmt: "mp3",
+        encoderArgs: ["-af", "bass=g=10,dynaudnorm=f=200"],
+    });
 
     const dispatcher = serverQueue.connection
-        .play(ytdl(song.url))
+        .play(stream, { type: "unknown" })
         .on("finish", () => {
             serverQueue.songs.shift();
             play(guild, serverQueue.songs[0]);
         })
-        .on("error", (error) => console.error(error));
+        .on("error", (error) => console.log(error));
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
     serverQueue.textChannel.send(`Start playing: **${song.title}**`);
 }
