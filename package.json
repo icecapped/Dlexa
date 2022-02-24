@@ -22,11 +22,12 @@
     "ffmpeg-static": "^4.4.1",
     "fs": "^0.0.1-security",
     "libsodium-wrappers": "^0.7.9",
+    "opusscript": "^0.0.8",
     "simple-youtube-api": "^5.2.1",
     "util": "^0.12.4",
     "ws": "^8.4.2",
     "ytdl": "^1.4.1",
-    "ytdl-core": "^4.10.0",
+    "ytdl-core": "^4.10.1",
     "ytpl": "^2.2.3"
   },
   "devDependencies": {
