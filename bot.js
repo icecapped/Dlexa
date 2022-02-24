@@ -90,6 +90,12 @@ client.on("message", async (message) => {
   } else if (command === "stop") {
     stop(message, serverQueue);
     return;
+  } else if (command === "shuffle") {
+    shuffle(message, serverQueue);
+    return;
+  } else if (command === "queue") {
+    showQueue(message, serverQueue);
+    return;
   }
 
   //leave call
@@ -349,6 +355,38 @@ function v_stop(serverQueue) {
 
   serverQueue.songs = [];
   serverQueue.connection.dispatcher.end();
+}
+
+function shuffle(message, serverQueue){
+    if(!serverQueue) return;
+
+    let songs = serverQueue.songs;
+    let index = songs.length;
+
+
+    while(index != 0){
+        let rIndex = Math.floor(Math.random() * index);
+        index--;
+
+        [songs[index], songs[rIndex]] = [songs[rIndex], songs[index]];
+    }
+    return message.channel.send("Queue has been shuffled!");
+}
+
+function showQueue(message, serverQueue){
+    if(!serverQueue){
+        return message.channel.send("Nothing in the queue!")
+    }
+
+    const songs = serverQueue.songs;
+    let outString = "```\n";
+    let count = 1;
+    songs.forEach(item => {
+        outString += count++ + ". "+ item.title + "\n";
+    })
+    outString += "```";
+    
+    return message.channel.send(outString);
 }
 
 function stop(message, serverQueue) {
