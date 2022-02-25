@@ -245,35 +245,37 @@ async function execute(message, serverQueue) {
         if (clearQ) {
           break;
         }
-        if (currentSong != undefined && !clearQ) {
+        if (currentSong != undefined) {
           songsAdded++;
-          const songURL = currentSong.url;
-          if (!clearQ) {
-            if (!queue.get(message.guild.id)) {
-              const queueContruct = {
-                textChannel: message.channel,
-                voiceChannel: voiceChannel,
-                connection: null,
-                songs: [],
-                volume: 5,
-                playing: true,
-              };
-              queue.set(message.guild.id, queueContruct);
-              currentServerQueue = queue.get(message.guild.id);
-              queueContruct.songs.push(songURL);
+          const song = {
+            title: currentSong.title,
+            url: currentSong.url
+          }
+          
+          if (!queue.get(message.guild.id)) {
+            const queueContruct = {
+              textChannel: message.channel,
+              voiceChannel: voiceChannel,
+              connection: null,
+              songs: [],
+              volume: 5,
+              playing: true,
+            };
+            queue.set(message.guild.id, queueContruct);
+            currentServerQueue = queue.get(message.guild.id);
+            queueContruct.songs.push(song);
 
-              try {
-                var connection = await voiceChannel.join();
-                queueContruct.connection = connection;
-                play(message.guild, queueContruct.songs[0]);
-              } catch (err) {
-                console.log(err);
-                queue.delete(message.guild.id);
-                return message.channel.send(err);
-              }
-            } else {
-              currentServerQueue.songs.push(songURL);
+            try {
+              var connection = await voiceChannel.join();
+              queueContruct.connection = connection;
+              play(message.guild, queueContruct.songs[0]);
+            } catch (err) {
+              console.log(err);
+              queue.delete(message.guild.id);
+              return message.channel.send(err);
             }
+          } else {
+            currentServerQueue.songs.push(song);
           }
         }
       }
@@ -292,6 +294,10 @@ async function execute(message, serverQueue) {
     }
   } else {
     const songInfo = await ytdl.getInfo(args[1]);
+    const song = {
+      title: songInfo.title,
+      url: songInfo.url
+    }
     if (!serverQueue) {
       const queueContruct = {
         textChannel: message.channel,
@@ -304,7 +310,7 @@ async function execute(message, serverQueue) {
 
       queue.set(message.guild.id, queueContruct);
 
-      queueContruct.songs.push(args[1]);
+      queueContruct.songs.push(song);
 
       try {
         var connection = await voiceChannel.join();
@@ -316,7 +322,7 @@ async function execute(message, serverQueue) {
         return message.channel.send(err);
       }
     } else {
-      serverQueue.songs.push(args[1]);
+      serverQueue.songs.push(song);
       return message.channel.send(
         `**${songInfo.videoDetails.title}** has been added to the queue!`
       );
@@ -357,36 +363,35 @@ function v_stop(serverQueue) {
   serverQueue.connection.dispatcher.end();
 }
 
-function shuffle(message, serverQueue){
-    if(!serverQueue) return;
+function shuffle(message, serverQueue) {
+  if (!serverQueue) return;
 
-    let songs = serverQueue.songs;
-    let index = songs.length;
+  let songs = serverQueue.songs;
+  let index = songs.length;
 
+  while (index != 0) {
+    let rIndex = Math.floor(Math.random() * index);
+    index--;
 
-    while(index != 0){
-        let rIndex = Math.floor(Math.random() * index);
-        index--;
-
-        [songs[index], songs[rIndex]] = [songs[rIndex], songs[index]];
-    }
-    return message.channel.send("Queue has been shuffled!");
+    [songs[index], songs[rIndex]] = [songs[rIndex], songs[index]];
+  }
+  return message.channel.send("Queue has been shuffled!");
 }
 
-function showQueue(message, serverQueue){
-    if(!serverQueue){
-        return message.channel.send("Nothing in the queue!")
-    }
+function showQueue(message, serverQueue) {
+  if (!serverQueue) {
+    return message.channel.send("Nothing in the queue!");
+  }
 
-    const songs = serverQueue.songs;
-    let outString = "```\n";
-    let count = 1;
-    songs.forEach(item => {
-        outString += count++ + ". "+ item.title + "\n";
-    })
-    outString += "```";
-    
-    return message.channel.send(outString);
+  const songs = serverQueue.songs;
+  let outString = "```\n";
+  let count = 1;
+  (songs.slice(0, 15)).forEach(item => {
+    outString += count++ + ". " + item.title + "\n";
+  });
+  outString += "```";
+
+  return message.channel.send(outString);
 }
 
 function stop(message, serverQueue) {
@@ -412,12 +417,9 @@ async function play(guild, song) {
     queue.delete(guild.id);
     return;
   }
-  const songInfo = await ytdl.getInfo(song);
+  //const songInfo = await ytdl.getInfo(song.url);
 
-  const currentSong = {
-    title: songInfo.videoDetails.title,
-    url: songInfo.videoDetails.video_url,
-  };
+  const currentSong = song;
   await sleep(500);
   let stream = ytdl(currentSong.url, {
     filter: "audioonly",
