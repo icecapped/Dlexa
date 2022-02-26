@@ -385,8 +385,8 @@ function showQueue(message, serverQueue) {
 
   const songs = serverQueue.songs;
   let outString = "```\n";
-  let count = 1;
-  (songs.slice(0, 15)).forEach(item => {
+  let count = 0;
+  (songs.slice(0, 16)).forEach(item => {
     outString += count++ + ". " + item.title + "\n";
   });
   outString += "```";
