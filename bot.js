@@ -374,7 +374,7 @@ function shuffle(message, serverQueue) {
     index--;
 
     [songs[index], songs[rIndex]] = [songs[rIndex], songs[index]];
-  }
+  } 
   return message.channel.send("Queue has been shuffled!");
 }
 
