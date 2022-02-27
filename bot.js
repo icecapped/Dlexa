@@ -295,8 +295,8 @@ async function execute(message, serverQueue) {
   } else {
     const songInfo = await ytdl.getInfo(args[1]);
     const song = {
-      title: songInfo.title,
-      url: songInfo.url
+      title: songInfo.videoDetails.title,
+      url: args[1]
     }
     if (!serverQueue) {
       const queueContruct = {
