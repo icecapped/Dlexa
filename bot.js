@@ -96,6 +96,9 @@ client.on("message", async (message) => {
   } else if (command === "queue") {
     showQueue(message, serverQueue);
     return;
+  } else if (command === "np") {
+    nowPlaying(message, serverQueue);
+    return;
   }
 
   //leave call
@@ -392,6 +395,14 @@ function showQueue(message, serverQueue) {
   outString += "```";
 
   return message.channel.send(outString);
+}
+
+function nowPlaying(message, serverQueue){
+  if (!serverQueue) {
+    return message.channel.send("Nothing playing!");
+  }
+
+  return message.channel.send(`Currently playing: **${serverQueue[0].title}**`);
 }
 
 function stop(message, serverQueue) {
