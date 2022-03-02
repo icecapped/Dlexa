@@ -103,21 +103,24 @@ client.on("message", async (message) => {
 
   //leave call
   if (command === "leave") {
-    if (
-      message.member.voice.channel.members.filter(
-        (e) => client.user.id === e.user.id
-      ).size == 0
-    )
-      return message.reply(`I already left`);
-    if (isAddingPlaylist.get(message.guild.id)) {
-      clearQueue.set(message.guild.id, true);
-    }
-    try {
-      serverQueue.songs = [];
-      serverQueue.connection.dispatcher.end();
-    } catch (error) {}
+    try{
+      if (
+        message.member.voice.channel.members.filter(
+          (e) => client.user.id === e.user.id
+        ).size == 0
+      )
+        return message.reply(`I already left`);
+      if (isAddingPlaylist.get(message.guild.id)) {
+        clearQueue.set(message.guild.id, true);
+      }
+      try {
+        serverQueue.songs = [];
+        serverQueue.connection.dispatcher.end();
+      } catch (error) {}
+  
+      channel.leave();
+    } catch(error) {}
 
-    channel.leave();
   }
 
   if (command === "record") {
