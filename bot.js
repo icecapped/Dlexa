@@ -103,7 +103,7 @@ client.on("message", async (message) => {
 
   //leave call
   if (command === "leave") {
-    try{
+    try {
       if (
         message.member.voice.channel.members.filter(
           (e) => client.user.id === e.user.id
@@ -117,10 +117,9 @@ client.on("message", async (message) => {
         serverQueue.songs = [];
         serverQueue.connection.dispatcher.end();
       } catch (error) {}
-  
-      channel.leave();
-    } catch(error) {}
 
+      channel.leave();
+    } catch (error) {}
   }
 
   if (command === "record") {
@@ -134,11 +133,21 @@ client.on("message", async (message) => {
         console.log(memberVC.user.username);
         const receiver = connection.receiver.createStream(memberVC, {
           mode: "pcm",
-          end: "manual",
         });
+        let buffer = [];
+        let count = 0;
         receiver.on("data", (data) => {
           //console.log("debug: " + data)
-          controller.sendAudio(data, memberVC);
+          buffer.push(data);
+          count += 1;
+          console.log("sending" + count);
+        });
+        receiver.on("end", async () => {
+          buffer = Buffer.concat(buffer);
+          const duration = buffer.length / 48000 / 4;
+          try {
+            controller.googleAudio(buffer, memberVC);
+          } catch (e) {}
         });
 
         message.channel.send("Recording for " + memberVC.user.username);
@@ -255,9 +264,9 @@ async function execute(message, serverQueue) {
           songsAdded++;
           const song = {
             title: currentSong.title,
-            url: currentSong.url
-          }
-          
+            url: currentSong.url,
+          };
+
           if (!queue.get(message.guild.id)) {
             const queueContruct = {
               textChannel: message.channel,
@@ -302,8 +311,8 @@ async function execute(message, serverQueue) {
     const songInfo = await ytdl.getInfo(args[1]);
     const song = {
       title: songInfo.videoDetails.title,
-      url: args[1]
-    }
+      url: args[1],
+    };
     if (!serverQueue) {
       const queueContruct = {
         textChannel: message.channel,
@@ -333,6 +342,22 @@ async function execute(message, serverQueue) {
         `**${songInfo.videoDetails.title}** has been added to the queue!`
       );
     }
+  }
+}
+async function convert_audio(input) {
+  try {
+    // stereo to mono channel
+    const data = new Int16Array(input);
+    const ndata = new Int16Array(data.length / 2);
+    for (let i = 0, j = 0; i < data.length; i += 4) {
+      ndata[j++] = data[i];
+      ndata[j++] = data[i + 1];
+    }
+    return Buffer.from(ndata);
+  } catch (e) {
+    console.log(e);
+    console.log("convert_audio: " + e);
+    throw e;
   }
 }
 
@@ -392,7 +417,7 @@ function showQueue(message, serverQueue) {
   const songs = serverQueue.songs;
   let outString = "```\n";
   let count = 0;
-  (songs.slice(0, 16)).forEach(item => {
+  songs.slice(0, 16).forEach((item) => {
     outString += count++ + ". " + item.title + "\n";
   });
   outString += "```";
@@ -400,7 +425,7 @@ function showQueue(message, serverQueue) {
   return message.channel.send(outString);
 }
 
-function nowPlaying(message, serverQueue){
+function nowPlaying(message, serverQueue) {
   if (!serverQueue) {
     return message.channel.send("Nothing playing!");
   }

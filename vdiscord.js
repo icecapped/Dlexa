@@ -35,10 +35,15 @@ const COMMANDS = [
 class VDiscord {
     static client;
     static keys;
+    
 
     static emitter = new EventEmitter();
 
     constructor(client){
+        const speech = require("@google-cloud/speech");
+        const projectId = "angular-unison-338316";
+        const keyFilename = "angular-unison-338316-0c8e7e275407.json";
+        this.googleClient = new speech.SpeechClient({ projectId, keyFilename });
         this.users = new Map();
         this.lookup = new Map();
         this.buffers = new Map();
@@ -131,6 +136,36 @@ class VDiscord {
         //emit event using cleint
     }
 
+    async googleAudio(chunk, user){
+        let username = user.user.username;
+        if(!this.users.has(user)){
+            this.buffers.set(user, Buffer.alloc(0));
+            this.users.set(user, null);
+        }
+        this.buffers.set(user, Buffer.concat([this.buffers.get(user), chunk]));
+        if(this.buffers.get(user).length / 2 >= FRAMES_PER_BUFFER){}
+        let new_buffer = await this.convert_audio(chunk);
+        const bytes = new_buffer.toString('base64'); 
+        const audio = {
+            content: bytes,
+        };
+        const config = {
+            encoding: "LINEAR16",
+            sampleRateHertz: 48000,
+            languageCode: "en-US",
+        };
+        const request = {
+            audio: audio,
+            config: config,
+        };
+        
+        // Detects speech in the audio file
+        const [response] = await this.googleClient.recognize(request);
+        const transcription = response.results
+            .map((result) => result.alternatives[0].transcript)
+            .join("\n");
+        console.log(`Transcription: ${transcription}`);
+    }
 
     //discord 'join' event calls send function which starts sending audio
     async sendAudio(chunk, user){
@@ -215,10 +250,24 @@ class VDiscord {
             format_text: false
         }));        
     }
+    async convert_audio(input) {
+        try {
+          // stereo to mono channel
+          const data = new Int16Array(input);
+          const ndata = new Int16Array(data.length / 2);
+          for (let i = 0, j = 0; i < data.length; i += 4) {
+            ndata[j++] = data[i];
+            ndata[j++] = data[i + 1];
+          }
+          return Buffer.from(ndata);
+        } catch (e) {
+          console.log(e);
+          console.log("convert_audio: " + e);
+          throw e;
+        }
+      }
 
 }
-
-console.log("asd")
 
 
 module.exports = VDiscord;
